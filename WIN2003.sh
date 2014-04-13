@@ -2,12 +2,65 @@
 
 set -e
 
+copyright() {
+  echo "Copyright (c) 2014 Cai Guanhao (Choi Goon-ho)"
+  echo "Licensed under the terms of the MIT license."
+  echo "Report bugs on https://github.com/caiguanhao/xen-config/issues"
+}
+
+help() {
+  echo "Usage: bash $0 [options]"
+  echo "  --help, -h                Show this help and exit"
+  echo "  --password, -p <password> Use this password when extracting .7z"
+  echo "  --template, -t <name>     Template name, default: $TEMPLATE"
+  echo "  --disk, -l <name>         Disk name, default: $DISKNAME"
+  echo "  --disksize, -d <size>     User disk size, default: $DISKSIZE"
+  echo "  --memory, -m <size>       Memory size, default: $MEMORY"
+  echo "  --number, -n <number>     Number of VMs to create, default: $VMNUMBER"
+  echo "  --no-confirm, -y          Don't waste time to confirm"
+  echo
+  copyright
+}
+
 NODE=d
 TEMPLATE=WIN2003
-MEMORY=3GiB
 DISKNAME=DTP_Windows_2003_c
-DISKSIZE=101GiB
+DISKSIZE=100GiB
+MEMORY=3GiB
 VMNUMBER=4
+P7ZIPPASS=
+NOCONFIRM=0
+
+for arg in "$@"; do
+  case "$arg" in
+  -h|--help)       help && exit 0                      ;;
+  -p|--password)   shift; P7ZIPPASS="-p\"$1\"";  shift ;;
+  -t|--template)   shift; TEMPLATE="$1";         shift ;;
+  -l|--disk)       shift; DISKNAME="$1";         shift ;;
+  -d|--disksize)   shift; DISKSIZE="$1";         shift ;;
+  -m|--memory)     shift; MEMORY="$1";           shift ;;
+  -n|--number)     shift; VMNUMBER="$1";         shift ;;
+  -y|--no-confirm) shift; NOCONFIRM=1;           shift ;;
+  esac
+done
+
+copyright
+
+echo
+
+if [[ $NOCONFIRM -eq 0 ]]; then
+  echo Variables:
+  echo Template name ........................... $TEMPLATE
+  echo Change disk of this name ................ $DISKNAME
+  echo Change user disk size to ................ $DISKSIZE
+  echo Change memory size of template to ....... $MEMORY
+  echo Number of VMs to create ................. $VMNUMBER
+  echo
+  echo "Operation starts in 10 seconds... Press Ctrl-C to Cancel"
+  sleep 10
+fi
+
+exit 1
 
 # Update the name label of Xen host
 
@@ -52,7 +105,7 @@ echo Extracting archive...
 curl -sL "http://sourceforge.net/projects/p7zip/files/p7zip/9.20.1/"\
 "p7zip_9.20.1_x86_linux_bin.tar.bz2/download" | tar jvfx - &&\
 mv p7zip_9.20.1/bin 7z && rm -rf p7zip_9.20.1
-./7z/7z x $TEMPLATE.7z
+./7z/7z x $P7ZIPPASS $TEMPLATE.7z
 
 echo Importing Template...
 xe vm-import filename=$TEMPLATE.xva
