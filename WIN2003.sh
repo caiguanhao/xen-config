@@ -8,6 +8,8 @@ MEMORY=3GiB
 DISKNAME=DTP_Windows_2003_c
 DISKSIZE=101GiB
 
+# Update the name label of Xen host
+
 echo Updating name of Xen host...
 
 IFS=$' \t\n'
@@ -24,9 +26,14 @@ if [[ $IPADDR == "" ]]; then
           grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`
 fi
 NEWNAME="$IPADDR"
-xe host-param-set uuid=$UUID name-label=$NEWNAME
 
-echo Name of Xen host has been changed from \"$OLDNAME\" to \"$NEWNAME\"...
+if [[ $NEWNAME == $OLDNAME ]]; then
+  echo No need to change the name of Xen host: \"$OLDNAME\"
+else
+  xe host-param-set uuid=$UUID name-label=$NEWNAME
+  echo Name of Xen host has been changed from \"$OLDNAME\" to \"$NEWNAME\"...
+fi
+
 
 echo Creating Storage...
 LVNAME=CGH
