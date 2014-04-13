@@ -21,11 +21,15 @@ help() {
   echo "  --disksize, -d <size>     User disk size, default: $DISKSIZE"
   echo "  --memory, -m <size>       Memory size, default: $MEMORY"
   echo "  --number, -n <number>     Number of VMs to create, default: $VMNUMBER"
+  echo "  -1, -2, ..., -10, ...     Only process nth VMs. --number is ignored."
   echo "  --no-confirm, -y          Don't waste time to confirm"
+  echo
+  echo "  --skip-os-install, -i     I have my OS installed!"
   echo
   copyright
 }
 
+# Variables:
 NODE_P="http://d"
 NODE_S=".cgh.io/"
 TEMPLATE=WIN2003
@@ -34,19 +38,26 @@ DISKSIZE=100GiB
 MEMORY=3GiB
 VMNUMBER=4
 P7ZIPPASS=
-NOCONFIRM=0
+INSTALLVMS=()
+
+# Switches:
+SKIPOSINSTALL=No
+NOCONFIRM=No
 
 for arg in "$@"; do
   case "$arg" in
-  -h|--help)       help && exit 0                      ;;
-  -u|--url)        shift; OSURL="$1";            shift ;;
-  -p|--password)   shift; P7ZIPPASS="-p\"$1\"";  shift ;;
-  -t|--template)   shift; TEMPLATE="$1";         shift ;;
-  -l|--disk)       shift; DISKNAME="$1";         shift ;;
-  -d|--disksize)   shift; DISKSIZE="$1";         shift ;;
-  -m|--memory)     shift; MEMORY="$1";           shift ;;
-  -n|--number)     shift; VMNUMBER="$1";         shift ;;
-  -y|--no-confirm) shift; NOCONFIRM=1;           shift ;;
+  -h|--help)            help && exit 0                      ;;
+  -u|--url)             shift; OSURL="$1";            shift ;;
+  -p|--password)        shift; P7ZIPPASS="-p\"$1\"";  shift ;;
+  -t|--template)        shift; TEMPLATE="$1";         shift ;;
+  -l|--disk)            shift; DISKNAME="$1";         shift ;;
+  -d|--disksize)        shift; DISKSIZE="$1";         shift ;;
+  -m|--memory)          shift; MEMORY="$1";           shift ;;
+  -n|--number)          shift; VMNUMBER="$1";         shift ;;
+  -y|--no-confirm)      shift; NOCONFIRM=Yes                ;;
+  -i|--skip-os-install) shift; SKIPOSINSTALL=Yes            ;;
+  -*[!0-9]*)                                                ;;
+  -*)                          INSTALLVMS+=(${1/-/}); shift ;;
   esac
 done
 
@@ -60,14 +71,19 @@ copyright
 
 echo
 
-if [[ $NOCONFIRM -eq 0 ]]; then
+if [[ $NOCONFIRM == "No" ]]; then
   echo Variables:
   echo Template name ........................... $TEMPLATE
   echo Change disk of this name ................ $DISKNAME
   echo Change user disk size to ................ $DISKSIZE
   echo Change memory size of template to ....... $MEMORY
+if [[ ${#INSTALLVMS[@]} -eq 0 ]]; then
   echo Number of VMs to create ................. $VMNUMBER
+else
+  echo Nth VMs to create ....................... ${INSTALLVMS[@]}
+fi
   echo URL of template to download ............. $OSURL
+  echo Skip OS installation .................... $SKIPOSINSTALL
   echo
   echo "Operation starts in 10 seconds... Press Ctrl-C to Cancel"
   sleep 10
@@ -99,6 +115,9 @@ else
   echo Name of Xen host has been changed from \"$OLDNAME\" to \"$NEWNAME\"...
 fi
 
+
+# Start installing OS ##########################################################
+if [[ $SKIPOSINSTALL == "No" ]]; then
 
 echo Creating Storage...
 LVNAME=CGH
@@ -174,6 +193,9 @@ xe vdi-resize uuid=$UUID disk-size=$DISKSIZE
 
 echo User disk resized.
 
+fi
+# Finished installing OS #######################################################
+
 
 echo Creating $VMNUMBER virtual machines from template...
 
@@ -183,7 +205,14 @@ if [[ $IPADDR == "" ]]; then
 fi
 IPADDR1=${IPADDR%.*}
 IPADDR2=${IPADDR##*.}
-for i in `seq $VMNUMBER`; do
+
+if [[ ${#INSTALLVMS[@]} -eq 0 ]]; then
+  SEQUENCE=`seq $VMNUMBER`
+else
+  SEQUENCE="${INSTALLVMS[@]}"
+fi
+
+for i in $SEQUENCE; do
   NAME="$IPADDR1.$(($IPADDR2 + $i))"
   echo Creating new VM named \"$NAME\" from template \"$TEMPLATE\"...
   VMUUID=`xe vm-install new-name-label=$NAME template=$TEMPLATE`
