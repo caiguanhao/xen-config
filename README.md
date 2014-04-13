@@ -90,21 +90,21 @@ Then make a archive. An archive file of 7GB template file takes up to 15
 minutes to complete archiving and ends up to be a 2.9GB 7z file.
 
 ```shell
-./7z/7z a MyOS.7z MyOS.xva
+./7z/7z a -p MyOS-encrypted.7z MyOS.xva
 ```
 
 Use `scp` to copy the 7z file to other host or other XenServer. Make sure the
 other host has sufficient space to process the template file.
 
 ```shell
-scp MyOS.7z root@111.111.111.111:/CGH
+scp MyOS-encrypted.7z root@111.111.111.111:/CGH
 ```
 
 Then it's time to extract the archive file. Extracting a 2.9GB 7z file needs
 about 5 minutes.
 
 ```shell
-./7z/7z x MyOS.7z
+./7z/7z x MyOS-encrypted.7z
 ```
 
 ### Import the template
@@ -113,4 +113,22 @@ Importing the template to XenServer is easy, but is also a time-consuming task.
 
 ```shell
 xe vm-import filename=MyOS.xva
+```
+
+### Faster login
+
+Add these lines to `ssh_config` file to avoid answering `yes` when connecting
+to server via SSH.
+
+```
+Host *
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null
+```
+
+And you can use `sshpass` to enter the password in a oneliner. You should ONLY
+use this command on your personal computer.
+
+```shell
+sshpass -p "password" ssh root@host 'curl -sL http://host/WIN2003.sh | sh'
 ```
