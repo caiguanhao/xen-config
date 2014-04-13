@@ -11,31 +11,31 @@ copyright() {
 
 help() {
   echo "Usage: bash $0 [options]"
-  echo "  --help, -h                Show this help and exit"
+  echo "  -h, --help                Show this help and exit"
   echo
-  echo "  --url, -u                 URL of the template to download"
+  echo "  -u, --url      <url>      URL of the template to download"
   echo "                            default is $NODE_P$NODE_S<template-name>.7z"
-  echo "                            If it is a number, like '2', it simply be:"
+  echo "                            If it is a number like '2', it will be:"
   echo "                            ${NODE_P}2$NODE_S<template-name>.7z"
-  echo "  --password, -p <password> Use this password when extracting .7z"
-  echo "  --template, -t <name>     Template name, default: $TEMPLATE"
-  echo "  --disk, -l <name>         Disk name, default: $DISKNAME"
-  echo "  --disksize, -d <size>     User disk size, default: $DISKSIZE"
-  echo "  --memory, -m <size>       Memory size, default: $MEMORY"
-  echo "  --skip-os-install, -i     I have my OS installed!"
+  echo "  -p, --password <password> Use this password when extracting .7z"
+  echo "  -t, --template <name>     Template name, default: $TEMPLATE"
+  echo "  -l, --disk     <name>     Disk name, default: $DISKNAME"
+  echo "  -d, --disksize <size>     User disk size, default: $DISKSIZE"
+  echo "  -m, --memory   <size>     Memory size, default: $MEMORY"
+  echo "  -i, --skip-os-install     I have my OS installed!"
   echo
-  echo "  --number, -n <number>     Number of VMs to create, default: $VMNUMBER"
+  echo "  -n, --number   <number>   Number of VMs to create, default: $VMNUMBER"
   echo "  -1, -2, ..., -10, ...     Only process nth VMs. --number is ignored."
-  echo "  --no-namesake, -s         Delete VMs having the same name if exists"
+  echo "  -s, --no-namesake         Delete VMs having the same name if exists"
   echo
-  echo "  --skip-host-label         Don't you ever touch my host name label!"
-  echo "  --no-confirm, -y          Don't waste time to confirm"
+  echo "      --skip-host-label     Don't you ever touch my host name label!"
+  echo "  -y, --no-confirm          Don't waste time to confirm"
   exit 0
 }
 
 unknown() {
   echo "Error: Unknown option -- $@."
-  echo "Use bash $0 -h for help info."
+  echo "Use bash $0 -h for more help info."
   exit 1
 }
 
