@@ -29,11 +29,11 @@ Usage: bash WIN2003.sh [options]
   --no-confirm, -y          Don't waste time to confirm
 
 Examples:
-    #1 - You have installed OS, but want to re-install your third VM:
-    bash WIN2003.sh -3 --skip-os-install --no-namesake
+  #1 - You have installed OS, but want to re-install your third VM:
+  bash WIN2003.sh -3 --skip-os-install --no-namesake
 
-    #2 - Pipe shell script
-    curl http://d.cgh.io/WIN2003.sh | bash /dev/stdin --help
+  #2 - Pipe shell script
+  curl http://d.cgh.io/WIN2003.sh | bash /dev/stdin --help
 ```
 
 Origin

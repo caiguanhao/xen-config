@@ -27,6 +27,8 @@ help() {
   echo "  --number, -n <number>     Number of VMs to create, default: $VMNUMBER"
   echo "  -1, -2, ..., -10, ...     Only process nth VMs. --number is ignored."
   echo "  --no-namesake, -s         Delete VMs having the same name if exists"
+  echo
+  echo "  --skip-host-label         Don't you ever touch my host name label!"
   echo "  --no-confirm, -y          Don't waste time to confirm"
   exit 0
 }
@@ -49,6 +51,7 @@ P7ZIPPASS=
 INSTALLVMS=()
 
 # Switches:
+SKIPHOSTLABEL=No
 SKIPOSINSTALL=No
 NOCONFIRM=No
 NONAMESAKE=No
@@ -68,6 +71,7 @@ for argument in "$@"; do
   -s|--no-namesake)      shift; NONAMESAKE=Yes               ;;
   -y|--no-confirm)       shift; NOCONFIRM=Yes                ;;
   -i|--skip-os-install)  shift; SKIPOSINSTALL=Yes            ;;
+     --skip-host-label)  shift; SKIPHOSTLABEL=Yes            ;;
   -*[!0-9]*)                    unknown $argument;           ;;
   -*)                           INSTALLVMS+=(${1/-/}); shift ;;
   esac
@@ -95,6 +99,7 @@ if [[ $NOCONFIRM == "No" ]]; then
   fi
   echo   "  -s" .. Delete VMs having the same name ......... $NONAMESAKE
   echo   "  -i" .. Skip OS installation .................... $SKIPOSINSTALL
+  echo   "    " .. Skip host label update .................. $SKIPHOSTLABEL
   echo
   echo   "Operation starts in 10 seconds... Press Ctrl-C to Cancel"
   for s in `seq 10 1`; do
@@ -104,7 +109,9 @@ if [[ $NOCONFIRM == "No" ]]; then
   echo 0
 fi
 
-# Update the name label of Xen host
+
+# Start updating the name label of Xen host ####################################
+if [[ $SKIPHOSTLABEL == "No" ]]; then
 
 echo Updating name of Xen host...
 
@@ -129,6 +136,9 @@ else
   xe host-param-set uuid=$UUID name-label=$NEWNAME
   echo Name of Xen host has been changed from \"$OLDNAME\" to \"$NEWNAME\"...
 fi
+
+fi
+# Finished updating the name label of Xen host #################################
 
 
 # Start installing OS ##########################################################
@@ -212,6 +222,7 @@ fi
 # Finished installing OS #######################################################
 
 
+# Start creating VMs ###########################################################
 if [[ ${#INSTALLVMS[@]} -eq 0 ]]; then
   echo Creating $VMNUMBER virtual machine(s) from template...
   SEQUENCE=`seq $VMNUMBER`
@@ -274,7 +285,9 @@ for i in $SEQUENCE; do
   echo "Starting VM \"$NAME\" ..."
   xe vm-start uuid=$VMUUID
   echo "VM \"$NAME\" has been started."
-
 done
+# Finished creating VMs ########################################################
+
 
 echo Done.
+exit 0
