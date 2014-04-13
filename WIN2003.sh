@@ -121,9 +121,39 @@ IPADDR1=${IPADDR%.*}
 IPADDR2=${IPADDR##*.}
 for i in `seq $VMNUMBER`; do
   NAME="$IPADDR1.$(($IPADDR2 + $i))"
-  echo Creating new VM named \"$NAME\"...
-  xe vm-install new-name-label=$NAME template=$TEMPLATE
-  echo "VM \"$NAME\" created. Usually it starts working in half a minute."
+  echo Creating new VM named \"$NAME\" from template \"$TEMPLATE\"...
+  VMUUID=`xe vm-install new-name-label=$NAME template=$TEMPLATE`
+  echo "VM \"$NAME\" created."
+
+  echo "Modifying MAC address for VM \"$NAME\"..."
+  VIFUUID=(`xe vif-list vm-uuid=$VMUUID | grep ^uuid | sed 's/.*: //'`)
+
+  if [[ ${#VIFUUID[@]} -gt 1 ]]; then
+    echo "Error: more than one vif is found for VM named \"$NAME\"."
+    exit 1
+  fi
+  if [[ ${#VIFUUID[@]} -lt 1 ]]; then
+    echo "Error: no vif is found for VM named \"$NAME\"."
+    exit 1
+  fi
+
+  OLDMAC=`xe vif-param-get uuid=$VIFUUID param-name=MAC`
+  NEWMAC="${OLDMAC:0:1}6${OLDMAC:2}"
+  if [[ $NEWMAC == $OLDMAC ]]; then
+    echo "No need to change Mac address."
+  else
+    DEVICE=`xe vif-param-get uuid=$VIFUUID param-name=device`
+    NWUUID=`xe vif-param-get uuid=$VIFUUID param-name=network-uuid`
+    xe vif-destroy uuid=$VIFUUID
+    xe vif-create device=$DEVICE network-uuid=$NWUUID vm-uuid=$VMUUID \
+       mac=$NEWMAC
+    echo "Mac address has been changed from \"$OLDMAC\" to \"$NEWMAC\"."
+  fi
+
+  echo "Starting VM \"$NAME\" ..."
+  xe vm-start uuid=$VMUUID
+  echo "VM \"$NAME\" has been started."
+
 done
 
 echo Done.
