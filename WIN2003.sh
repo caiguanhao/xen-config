@@ -7,6 +7,7 @@ TEMPLATE=WIN2003
 MEMORY=3GiB
 DISKNAME=DTP_Windows_2003_c
 DISKSIZE=101GiB
+VMNUMBER=4
 
 # Update the name label of Xen host
 
@@ -108,5 +109,21 @@ fi
 xe vdi-resize uuid=$UUID disk-size=$DISKSIZE
 
 echo User disk resized.
+
+
+echo Creating $VMNUMBER virtual machines from template...
+
+if [[ $IPADDR == "" ]]; then
+  IPADDR=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | \
+          grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`
+fi
+IPADDR1=${IPADDR%.*}
+IPADDR2=${IPADDR##*.}
+for i in `seq $VMNUMBER`; do
+  NAME="$IPADDR1.$(($IPADDR2 + $i))"
+  echo Creating new VM named \"$NAME\"...
+  xe vm-install new-name-label=$NAME template=$TEMPLATE
+  echo "VM \"$NAME\" created. Usually it starts working in half a minute."
+done
 
 echo Done.
