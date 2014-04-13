@@ -6,11 +6,13 @@ copyright() {
   echo "Copyright (c) 2014 Cai Guanhao (Choi Goon-ho)"
   echo "Licensed under the terms of the MIT license."
   echo "Report bugs on https://github.com/caiguanhao/xen-config/issues"
+  echo
 }
 
 help() {
   echo "Usage: bash $0 [options]"
   echo "  --help, -h                Show this help and exit"
+  echo
   echo "  --url, -u                 URL of the template to download"
   echo "                            default is $NODE_P$NODE_S<template-name>.7z"
   echo "                            If it is a number, like '2', it simply be:"
@@ -20,14 +22,19 @@ help() {
   echo "  --disk, -l <name>         Disk name, default: $DISKNAME"
   echo "  --disksize, -d <size>     User disk size, default: $DISKSIZE"
   echo "  --memory, -m <size>       Memory size, default: $MEMORY"
+  echo "  --skip-os-install, -i     I have my OS installed!"
+  echo
   echo "  --number, -n <number>     Number of VMs to create, default: $VMNUMBER"
   echo "  -1, -2, ..., -10, ...     Only process nth VMs. --number is ignored."
   echo "  --no-namesake, -s         Delete VMs having the same name if exists"
   echo "  --no-confirm, -y          Don't waste time to confirm"
-  echo
-  echo "  --skip-os-install, -i     I have my OS installed!"
-  echo
-  copyright
+  exit 0
+}
+
+unknown() {
+  echo "Error: Unknown option -- $@."
+  echo "Use bash $0 -h for help info."
+  exit 1
 }
 
 # Variables:
@@ -46,51 +53,55 @@ SKIPOSINSTALL=No
 NOCONFIRM=No
 NONAMESAKE=No
 
-for arg in "$@"; do
-  case "$arg" in
-  -h|--help)            help && exit 0                      ;;
-  -u|--url)             shift; OSURL="$1";            shift ;;
-  -p|--password)        shift; P7ZIPPASS="-p\"$1\"";  shift ;;
-  -t|--template)        shift; TEMPLATE="$1";         shift ;;
-  -l|--disk)            shift; DISKNAME="$1";         shift ;;
-  -d|--disksize)        shift; DISKSIZE="$1";         shift ;;
-  -m|--memory)          shift; MEMORY="$1";           shift ;;
-  -n|--number)          shift; VMNUMBER="$1";         shift ;;
-  -s|--no-namesake)     shift; NONAMESAKE=Yes               ;;
-  -y|--no-confirm)      shift; NOCONFIRM=Yes                ;;
-  -i|--skip-os-install) shift; SKIPOSINSTALL=Yes            ;;
-  -*[!0-9]*)                                                ;;
-  -*)                          INSTALLVMS+=(${1/-/}); shift ;;
+copyright
+
+for argument in "$@"; do
+  case "$argument" in
+  -h|--help)                    help                         ;;
+  -u|--url)              shift; OSURL="$1";            shift ;;
+  -p|--password)         shift; P7ZIPPASS="-p\"$1\"";  shift ;;
+  -t|--template)         shift; TEMPLATE="$1";         shift ;;
+  -l|--disk)             shift; DISKNAME="$1";         shift ;;
+  -d|--disksize)         shift; DISKSIZE="$1";         shift ;;
+  -m|--memory)           shift; MEMORY="$1";           shift ;;
+  -n|--number)           shift; VMNUMBER="$1";         shift ;;
+  -s|--no-namesake)      shift; NONAMESAKE=Yes               ;;
+  -y|--no-confirm)       shift; NOCONFIRM=Yes                ;;
+  -i|--skip-os-install)  shift; SKIPOSINSTALL=Yes            ;;
+  -*[!0-9]*)                    unknown $argument;           ;;
+  -*)                           INSTALLVMS+=(${1/-/}); shift ;;
   esac
 done
 
 case $OSURL in
-  "")        OSURL="$NODE_P$NODE_S$TEMPLATE.7z"        ;;
-  *[!0-9]*)                                            ;;
-  *)         OSURL="$NODE_P$OSURL$NODE_S$TEMPLATE.7z"  ;;
+  "")            OSURL="$NODE_P$NODE_S$TEMPLATE.7z"          ;;
+  *[!0-9]*)                                                  ;;
+  *)             OSURL="$NODE_P$OSURL$NODE_S$TEMPLATE.7z"    ;;
 esac
 
-copyright
-
-echo
-
 if [[ $NOCONFIRM == "No" ]]; then
-  echo Variables:
-  echo Template name ........................... $TEMPLATE
-  echo Change disk of this name ................ $DISKNAME
-  echo Change user disk size to ................ $DISKSIZE
-  echo Change memory size of template to ....... $MEMORY
-if [[ ${#INSTALLVMS[@]} -eq 0 ]]; then
-  echo Number of VMs to create ................. $VMNUMBER
-else
-  echo Nth VMs to create ....................... ${INSTALLVMS[@]}
-fi
-  echo URL of template to download ............. $OSURL
-  echo Delete VMs having the same name ......... $NONAMESAKE
-  echo Skip OS installation .................... $SKIPOSINSTALL
+  echo Options enabled:
+  if [[ $SKIPOSINSTALL == "No" ]]; then
+    echo "  -u" .. URL of template to download ............. $OSURL
+    echo "  -t" .. Template name ........................... $TEMPLATE
+    echo "  -l" .. Change disk of this name ................ $DISKNAME
+    echo "  -d" .. Change user disk size to ................ $DISKSIZE
+    echo "  -m" .. Change memory size of template to ....... $MEMORY
+  fi
+  if [[ ${#INSTALLVMS[@]} -eq 0 ]]; then
+    echo "  -n" .. Number of VMs to create ................. $VMNUMBER
+  else
+    echo "  --" .. Nth VMs to create ....................... ${INSTALLVMS[@]}
+  fi
+  echo   "  -s" .. Delete VMs having the same name ......... $NONAMESAKE
+  echo   "  -i" .. Skip OS installation .................... $SKIPOSINSTALL
   echo
-  echo "Operation starts in 10 seconds... Press Ctrl-C to Cancel"
-  sleep 10
+  echo   "Operation starts in 10 seconds... Press Ctrl-C to Cancel"
+  for s in `seq 10 1`; do
+    printf "$s.."
+    sleep 1
+  done
+  echo 0
 fi
 
 # Update the name label of Xen host
@@ -201,7 +212,13 @@ fi
 # Finished installing OS #######################################################
 
 
-echo Creating $VMNUMBER virtual machines from template...
+if [[ ${#INSTALLVMS[@]} -eq 0 ]]; then
+  echo Creating $VMNUMBER virtual machine(s) from template...
+  SEQUENCE=`seq $VMNUMBER`
+else
+  echo Creating ${#INSTALLVMS[@]} virtual machine(s) from template...
+  SEQUENCE="${INSTALLVMS[@]}"
+fi
 
 if [[ $IPADDR == "" ]]; then
   IPADDR=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | \
@@ -209,12 +226,6 @@ if [[ $IPADDR == "" ]]; then
 fi
 IPADDR1=${IPADDR%.*}
 IPADDR2=${IPADDR##*.}
-
-if [[ ${#INSTALLVMS[@]} -eq 0 ]]; then
-  SEQUENCE=`seq $VMNUMBER`
-else
-  SEQUENCE="${INSTALLVMS[@]}"
-fi
 
 for i in $SEQUENCE; do
   NAME="$IPADDR1.$(($IPADDR2 + $i))"
