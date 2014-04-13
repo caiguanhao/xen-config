@@ -8,6 +8,26 @@ MEMORY=3GiB
 DISKNAME=DTP_Windows_2003_c
 DISKSIZE=101GiB
 
+echo Updating name of Xen host...
+
+IFS=$' \t\n'
+UUID=(`xe host-list | grep ^uuid | sed 's/.*: //'`)
+if [[ ${#UUID[@]} -gt 1 ]]; then
+  echo "Error: it should have one host. right?"
+  exit 1
+fi
+OLDNAME=`xe host-param-get uuid=$UUID param-name=name-label`
+IPADDR=`xe host-param-get uuid=$UUID param-name=address`
+if [[ $IPADDR == "" ]]; then
+  echo Getting IP address from ifconfig instead of xe command...
+  IPADDR=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | \
+          grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`
+fi
+NEWNAME="$IPADDR"
+xe host-param-set uuid=$UUID name-label=$NEWNAME
+
+echo Name of Xen host has been changed from \"$OLDNAME\" to \"$NEWNAME\"...
+
 echo Creating Storage...
 LVNAME=CGH
 VGNAME=`vgs | grep "VG_XenStorage" | cut -c 3-52`
