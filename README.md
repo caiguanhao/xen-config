@@ -5,6 +5,37 @@ Tools I used to accelerate the installation of Xen virtual machines.
 
 Requires: XenServer 6
 
+Usage
+-----
+
+```
+Usage: bash WIN2003.sh [options]
+  --help, -h                Show this help and exit
+
+  --url, -u                 URL of the template to download
+                            default is http://d.cgh.io/<template-name>.7z
+                            If it is a number, like '2', it simply be:
+                            http://d2.cgh.io/<template-name>.7z
+  --password, -p <password> Use this password when extracting .7z
+  --template, -t <name>     Template name, default: WIN2003
+  --disk, -l <name>         Disk name, default: DTP_Windows_2003_c
+  --disksize, -d <size>     User disk size, default: 100GiB
+  --memory, -m <size>       Memory size, default: 3GiB
+  --skip-os-install, -i     I have my OS installed!
+
+  --number, -n <number>     Number of VMs to create, default: 4
+  -1, -2, ..., -10, ...     Only process nth VMs. --number is ignored.
+  --no-namesake, -s         Delete VMs having the same name if exists
+  --no-confirm, -y          Don't waste time to confirm
+
+Examples:
+    #1 - You have installed OS, but want to re-install your third VM:
+    bash WIN2003.sh -3 --skip-os-install --no-namesake
+
+    #2 - Pipe shell script
+    curl http://d.cgh.io/WIN2003.sh | bash /dev/stdin --help
+```
+
 Origin
 ------
 
