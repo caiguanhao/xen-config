@@ -22,6 +22,7 @@ help() {
   echo "  --memory, -m <size>       Memory size, default: $MEMORY"
   echo "  --number, -n <number>     Number of VMs to create, default: $VMNUMBER"
   echo "  -1, -2, ..., -10, ...     Only process nth VMs. --number is ignored."
+  echo "  --no-namesake, -s         Delete VMs having the same name if exists"
   echo "  --no-confirm, -y          Don't waste time to confirm"
   echo
   echo "  --skip-os-install, -i     I have my OS installed!"
@@ -43,6 +44,7 @@ INSTALLVMS=()
 # Switches:
 SKIPOSINSTALL=No
 NOCONFIRM=No
+NONAMESAKE=No
 
 for arg in "$@"; do
   case "$arg" in
@@ -54,6 +56,7 @@ for arg in "$@"; do
   -d|--disksize)        shift; DISKSIZE="$1";         shift ;;
   -m|--memory)          shift; MEMORY="$1";           shift ;;
   -n|--number)          shift; VMNUMBER="$1";         shift ;;
+  -s|--no-namesake)     shift; NONAMESAKE=Yes               ;;
   -y|--no-confirm)      shift; NOCONFIRM=Yes                ;;
   -i|--skip-os-install) shift; SKIPOSINSTALL=Yes            ;;
   -*[!0-9]*)                                                ;;
@@ -83,6 +86,7 @@ else
   echo Nth VMs to create ....................... ${INSTALLVMS[@]}
 fi
   echo URL of template to download ............. $OSURL
+  echo Delete VMs having the same name ......... $NONAMESAKE
   echo Skip OS installation .................... $SKIPOSINSTALL
   echo
   echo "Operation starts in 10 seconds... Press Ctrl-C to Cancel"
@@ -214,6 +218,19 @@ fi
 
 for i in $SEQUENCE; do
   NAME="$IPADDR1.$(($IPADDR2 + $i))"
+
+  if [[ $NONAMESAKE == "Yes" ]]; then
+    IFS=$' \t\n'
+    NAMESAKES=(`xe vm-list | grep "$NAME" -B 1 | grep ^uuid | sed 's/.*: //'`)
+    if [[ ${#NAMESAKES[@]} -eq 0 ]]; then
+      echo "Don't worry. No VM uses the name \"$NAME\"."
+    else
+      for NS in "${NAMESAKES[@]}"; do
+        xe vm-uninstall uuid=$NS force=true
+      done
+    fi
+  fi
+
   echo Creating new VM named \"$NAME\" from template \"$TEMPLATE\"...
   VMUUID=`xe vm-install new-name-label=$NAME template=$TEMPLATE`
   echo "VM \"$NAME\" created."
