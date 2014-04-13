@@ -11,6 +11,10 @@ copyright() {
 help() {
   echo "Usage: bash $0 [options]"
   echo "  --help, -h                Show this help and exit"
+  echo "  --url, -u                 URL of the template to download"
+  echo "                            default is $NODE_P$NODE_S<template-name>.7z"
+  echo "                            If it is a number, like '2', it simply be:"
+  echo "                            ${NODE_P}2$NODE_S<template-name>.7z"
   echo "  --password, -p <password> Use this password when extracting .7z"
   echo "  --template, -t <name>     Template name, default: $TEMPLATE"
   echo "  --disk, -l <name>         Disk name, default: $DISKNAME"
@@ -22,7 +26,8 @@ help() {
   copyright
 }
 
-NODE=d
+NODE_P="http://d"
+NODE_S=".cgh.io/"
 TEMPLATE=WIN2003
 DISKNAME=DTP_Windows_2003_c
 DISKSIZE=100GiB
@@ -34,6 +39,7 @@ NOCONFIRM=0
 for arg in "$@"; do
   case "$arg" in
   -h|--help)       help && exit 0                      ;;
+  -u|--url)        shift; OSURL="$1";            shift ;;
   -p|--password)   shift; P7ZIPPASS="-p\"$1\"";  shift ;;
   -t|--template)   shift; TEMPLATE="$1";         shift ;;
   -l|--disk)       shift; DISKNAME="$1";         shift ;;
@@ -43,6 +49,12 @@ for arg in "$@"; do
   -y|--no-confirm) shift; NOCONFIRM=1;           shift ;;
   esac
 done
+
+case $OSURL in
+  "")        OSURL="$NODE_P$NODE_S$TEMPLATE.7z"        ;;
+  *[!0-9]*)                                            ;;
+  *)         OSURL="$NODE_P$OSURL$NODE_S$TEMPLATE.7z"  ;;
+esac
 
 copyright
 
@@ -55,12 +67,11 @@ if [[ $NOCONFIRM -eq 0 ]]; then
   echo Change user disk size to ................ $DISKSIZE
   echo Change memory size of template to ....... $MEMORY
   echo Number of VMs to create ................. $VMNUMBER
+  echo URL of template to download ............. $OSURL
   echo
   echo "Operation starts in 10 seconds... Press Ctrl-C to Cancel"
   sleep 10
 fi
-
-exit 1
 
 # Update the name label of Xen host
 
@@ -99,7 +110,7 @@ mount /dev/$VGNAME/$LVNAME /$LVNAME
 cd /$LVNAME
 
 echo Downloading OS...
-curl -O http://$NODE.cgh.io/$TEMPLATE.7z
+curl -LO $OSURL
 
 echo Extracting archive...
 curl -sL "http://sourceforge.net/projects/p7zip/files/p7zip/9.20.1/"\
