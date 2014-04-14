@@ -19,7 +19,7 @@ rem "
 rem Make sure you have written IP addresses to the XenStore of each VM domain.
 rem For a list of domain IDS, run `xl list` or `xenstore-list /local/domain`
 rem on XenServer host.
-set /a domain_id_max="8"
+set /a domain_id_max="20"
 
 for /l %%i in (0,1,%domain_id_max%) do (
   for /f %%o in ('xenstore_client read /local/domain/%%i/ip') do (

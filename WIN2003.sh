@@ -271,7 +271,7 @@ if [[ $SKIPVMINSTALL == "No" ]]; then
 
   for i in $SEQUENCE; do
     VMIPADDR="$IPADDR1.$(($IPADDR2 + $i))"
-    NAME=VMIPADDR
+    NAME=$VMIPADDR
 
     if [[ $NONAMESAKE == "Yes" ]]; then
       IFS=$' \t\n'
@@ -289,7 +289,7 @@ if [[ $SKIPVMINSTALL == "No" ]]; then
     VMUUID=`xe vm-install new-name-label=$NAME template=$TEMPLATE`
     echo "VM $NAME created."
 
-    echo "Writing IP address to XenStore..."
+    echo "Writing IP address to XenStore with Domain ID $VMDOMID..."
     VMDOMID=`xe vm-param-get uuid=$VMUUID param-name=dom-id`
     xenstore-write /local/domain/$VMDOMID/ip         $VMIPADDR
     xenstore-write /local/domain/$VMDOMID/subnetmask $SUBNETMASK
