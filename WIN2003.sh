@@ -123,33 +123,45 @@ if [[ $NOCONFIRM == "No" ]]; then
 fi
 
 
+# Getting basic information ####################################################
+IFS=$' \t\n'
+HOSTUUID=(`xe host-list | grep ^uuid | sed 's/.*: //'`)
+if [[ ${#HOSTUUID[@]} -gt 1 ]]; then
+  echo "Error: it should have one host. Right?"
+  exit 1
+fi
+IPADDR=`xe host-param-get uuid=$HOSTUUID param-name=address`
+if [[ $IPADDR == "" ]]; then
+  echo Getting IP address from ifconfig instead of xe command...
+  IPADDR=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | \
+          grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`
+fi
+IFS=$','
+for PIFUUID in `xe pif-list --minimal`; do
+  PIFIP=`xe pif-param-get param-name=IP uuid=$PIFUUID`
+  if [[ $PIFIP == $IPADDR ]]; then
+    SUBNETMASK=`xe pif-param-get param-name=netmask uuid=$PIFUUID`
+    GATEWAY=`xe pif-param-get param-name=gateway uuid=$PIFUUID`
+  fi
+done
+if [[ $SUBNETMASK == "" || $GATEWAY == "" ]]; then
+  echo Failed to get subnet mask and gateway IP address.
+  exit 1
+fi
+# Finshed getting basic information ############################################
+
+
 # Start updating the name label of Xen host ####################################
 if [[ $SKIPHOSTLABEL == "No" ]]; then
-
   echo Updating name of Xen host...
-
-  IFS=$' \t\n'
-  UUID=(`xe host-list | grep ^uuid | sed 's/.*: //'`)
-  if [[ ${#UUID[@]} -gt 1 ]]; then
-    echo "Error: it should have one host. right?"
-    exit 1
-  fi
-  OLDNAME=`xe host-param-get uuid=$UUID param-name=name-label`
-  IPADDR=`xe host-param-get uuid=$UUID param-name=address`
-  if [[ $IPADDR == "" ]]; then
-    echo Getting IP address from ifconfig instead of xe command...
-    IPADDR=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | \
-            grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`
-  fi
+  OLDNAME=`xe host-param-get uuid=$HOSTUUID param-name=name-label`
   NEWNAME="$IPADDR"
-
   if [[ $NEWNAME == $OLDNAME ]]; then
     echo No need to change the name of Xen host: \"$OLDNAME\"
   else
-    xe host-param-set uuid=$UUID name-label=$NEWNAME
+    xe host-param-set uuid=$HOSTUUID name-label=$NEWNAME
     echo Name of Xen host has been changed from \"$OLDNAME\" to \"$NEWNAME\"...
   fi
-
 fi
 # Finished updating the name label of Xen host #################################
 
@@ -254,21 +266,18 @@ if [[ $SKIPVMINSTALL == "No" ]]; then
     SEQUENCE="${INSTALLVMS[@]}"
   fi
 
-  if [[ $IPADDR == "" ]]; then
-    IPADDR=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | \
-            grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`
-  fi
   IPADDR1=${IPADDR%.*}
   IPADDR2=${IPADDR##*.}
 
   for i in $SEQUENCE; do
-    NAME="$IPADDR1.$(($IPADDR2 + $i))"
+    VMIPADDR="$IPADDR1.$(($IPADDR2 + $i))"
+    NAME=VMIPADDR
 
     if [[ $NONAMESAKE == "Yes" ]]; then
       IFS=$' \t\n'
       NAMESAKES=(`xe vm-list | grep "$NAME" -B 1 | grep ^uuid | sed 's/.*: //'`)
       if [[ ${#NAMESAKES[@]} -eq 0 ]]; then
-        echo "Don't worry. No VM uses the name \"$NAME\"."
+        echo "Don't worry. No VM uses the name $NAME."
       else
         for NS in "${NAMESAKES[@]}"; do
           xe vm-uninstall uuid=$NS force=true
@@ -276,38 +285,47 @@ if [[ $SKIPVMINSTALL == "No" ]]; then
       fi
     fi
 
-    echo Creating new VM named \"$NAME\" from template \"$TEMPLATE\"...
+    echo Creating new VM named $NAME from template $TEMPLATE...
     VMUUID=`xe vm-install new-name-label=$NAME template=$TEMPLATE`
-    echo "VM \"$NAME\" created."
+    echo "VM $NAME created."
 
-    echo "Modifying MAC address for VM \"$NAME\"..."
+    echo "Writing IP address to XenStore..."
+    VMDOMID=`xe vm-param-get uuid=$VMUUID param-name=dom-id`
+    xenstore-write /local/domain/$VMDOMID/ip         $VMIPADDR
+    xenstore-write /local/domain/$VMDOMID/subnetmask $SUBNETMASK
+    xenstore-write /local/domain/$VMDOMID/gateway    $GATEWAY
+    echo  IP Address: $VMIPADDR
+    echo Subnet Mask: $SUBNETMASK
+    echo     Gateway: $GATEWAY
+
+    echo "Modifying MAC address for VM $NAME..."
     VIFUUID=(`xe vif-list vm-uuid=$VMUUID | grep ^uuid | sed 's/.*: //'`)
 
     if [[ ${#VIFUUID[@]} -gt 1 ]]; then
-      echo "Error: more than one vif is found for VM named \"$NAME\"."
+      echo "Error: more than one vif is found for VM named $NAME."
       exit 1
     fi
     if [[ ${#VIFUUID[@]} -lt 1 ]]; then
-      echo "Error: no vif is found for VM named \"$NAME\"."
+      echo "Error: no vif is found for VM named $NAME."
       exit 1
     fi
 
     OLDMAC=`xe vif-param-get uuid=$VIFUUID param-name=MAC`
     NEWMAC="${OLDMAC:0:1}6${OLDMAC:2}"
     if [[ $NEWMAC == $OLDMAC ]]; then
-      echo "No need to change Mac address."
+      echo "No need to change Mac address: $OLDMAC"
     else
       DEVICE=`xe vif-param-get uuid=$VIFUUID param-name=device`
       NWUUID=`xe vif-param-get uuid=$VIFUUID param-name=network-uuid`
       xe vif-destroy uuid=$VIFUUID
       xe vif-create device=$DEVICE network-uuid=$NWUUID vm-uuid=$VMUUID \
          mac=$NEWMAC
-      echo "Mac address has been changed from \"$OLDMAC\" to \"$NEWMAC\"."
+      echo "Mac address has been changed from $OLDMAC to $NEWMAC."
     fi
 
-    echo "Starting VM \"$NAME\" ..."
+    echo "Starting VM $NAME ..."
     xe vm-start uuid=$VMUUID
-    echo "VM \"$NAME\" has been started."
+    echo "VM $NAME has been started."
   done
 fi
 # Finished creating VMs ########################################################
