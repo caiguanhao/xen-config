@@ -52,6 +52,7 @@ MEMORY=3GiB
 VMNUMBER=4
 P7ZIPPASS=
 INSTALLVMS=()
+LVNAME=CGH
 
 # Switches:
 SKIPHOSTLABEL=No
@@ -157,7 +158,6 @@ fi
 if [[ $SKIPTPLDWLOAD == "No" ]]; then
   if [[ ! -d /$LVNAME ]]; then
     echo Creating Storage...
-    LVNAME=CGH
     VGNAME=`vgs | grep "VG_XenStorage" | cut -c 3-52`
     lvcreate -L 35GB -n $LVNAME $VGNAME
     mkfs.ext3 /dev/$VGNAME/$LVNAME
