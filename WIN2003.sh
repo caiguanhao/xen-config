@@ -163,16 +163,18 @@ if [[ $SKIPTPLDWLOAD == "No" ]]; then
     mkfs.ext3 /dev/$VGNAME/$LVNAME
     mkdir /$LVNAME
     mount /dev/$VGNAME/$LVNAME /$LVNAME
-    cd /$LVNAME
   fi
+
+  cd /$LVNAME
 
   echo Downloading template...
   curl -LOC - $OSURL
 
   if [[ ! -f ./7z/7z ]]; then
     echo Downloading p7zip...
-    curl -sL "http://sourceforge.net/projects/p7zip/files/p7zip/9.20.1/"\
-    "p7zip_9.20.1_x86_linux_bin.tar.bz2/download" | tar jfx - &&\
+    P7ZIPURL="http://sourceforge.net/projects/p7zip/files/p7zip/9.20.1/"
+    P7ZIPURL="${P7ZIPURL}p7zip_9.20.1_x86_linux_bin.tar.bz2/download"
+    curl -sL $P7ZIPURL | tar jfx - &&\
     mv p7zip_9.20.1/bin 7z && rm -rf p7zip_9.20.1
   fi
 
