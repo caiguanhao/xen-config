@@ -33,6 +33,8 @@ help() {
   echo "      --skip-tpl-import     Don't import template again"
   echo "      --skip-tpl-adjust     Don't adjust memory and disk"
   echo "      --skip-vm-install     I have my virtual machines installed!"
+  echo
+  echo "  -#, --progress-bar        I just love to use cURL's progress bar"
   exit 0
 }
 
@@ -53,6 +55,7 @@ VMNUMBER=4
 P7ZIPPASS=
 INSTALLVMS=()
 LVNAME=CGH
+CURLPBAR=
 
 # Switches:
 SKIPHOSTLABEL=No
@@ -82,7 +85,8 @@ for argument in "$@"; do
      --skip-tpl-import)  shift; SKIPTPLIMPORT=Yes            ;;
      --skip-tpl-adjust)  shift; SKIPTPLADJUST=Yes            ;;
      --skip-vm-install)  shift; SKIPVMINSTALL=Yes            ;;
-  -*[!0-9]*)                    unknown $argument;           ;;
+  -#|--progress-bar)     shift; CURLPBAR="-#"                ;;
+  -*[!0-9]*)                    unknown $argument            ;;
   -*)                           INSTALLVMS+=(${1/-/}); shift ;;
   esac
 done
@@ -180,7 +184,7 @@ if [[ $SKIPTPLDWLOAD == "No" ]]; then
   cd /$LVNAME
 
   echo Downloading template...
-  curl -LOC - $OSURL
+  curl -LOC - $CURLPBAR $OSURL
 
   if [[ ! -f ./7z/7z ]]; then
     echo Downloading p7zip...
