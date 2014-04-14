@@ -289,15 +289,6 @@ if [[ $SKIPVMINSTALL == "No" ]]; then
     VMUUID=`xe vm-install new-name-label=$NAME template=$TEMPLATE`
     echo "VM $NAME created."
 
-    echo "Writing IP address to XenStore with Domain ID $VMDOMID..."
-    VMDOMID=`xe vm-param-get uuid=$VMUUID param-name=dom-id`
-    xenstore-write /local/domain/$VMDOMID/ip         $VMIPADDR
-    xenstore-write /local/domain/$VMDOMID/subnetmask $SUBNETMASK
-    xenstore-write /local/domain/$VMDOMID/gateway    $GATEWAY
-    echo  IP Address: $VMIPADDR
-    echo Subnet Mask: $SUBNETMASK
-    echo     Gateway: $GATEWAY
-
     echo "Modifying MAC address for VM $NAME..."
     VIFUUID=(`xe vif-list vm-uuid=$VMUUID | grep ^uuid | sed 's/.*: //'`)
 
@@ -326,6 +317,17 @@ if [[ $SKIPVMINSTALL == "No" ]]; then
     echo "Starting VM $NAME ..."
     xe vm-start uuid=$VMUUID
     echo "VM $NAME has been started."
+
+    # Get Domain ID after VM starts
+    VMDOMID=`xe vm-param-get uuid=$VMUUID param-name=dom-id`
+    xenstore-write /local/domain/$VMDOMID/ip         $VMIPADDR
+    xenstore-write /local/domain/$VMDOMID/subnetmask $SUBNETMASK
+    xenstore-write /local/domain/$VMDOMID/gateway    $GATEWAY
+    echo "IP address has been written to XenStore with Domain ID $VMDOMID..."
+    echo "          IP Address: $VMIPADDR"
+    echo "         Subnet Mask: $SUBNETMASK"
+    echo "             Gateway: $GATEWAY"
+    echo
   done
 fi
 # Finished creating VMs ########################################################
