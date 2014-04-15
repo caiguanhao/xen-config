@@ -1,0 +1,5 @@
+# RDP EXAMPLES
+
+# IP Address      Username          Password
+12.34.56.78       Administrator     123456
+122.134.156.178   Administrator     123456        # important
