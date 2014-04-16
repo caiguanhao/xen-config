@@ -4,15 +4,17 @@
  echo Report bugs on https://github.com/caiguanhao/xen-config/issues
  echo --------------------------------------------------------------
 
-rem Usage: Create or edit RDP.txt in the same directory of this BAT file,
-rem type your IP address, username and password in order and separate them
-rem by spaces or tabs. Each line represents an RDP connection. Example:
-rem 12.34.56.78 Administrator 123456
+rem Usage: Create or edit RDP.txt in the same directory or sub-directories
+rem of this BAT file, type your IP address, username and password in order
+rem and separate them by spaces or tabs. Each line represents an RDP
+rem connection. For example:
+rem     12.34.56.78 Administrator 123456
 
 set /a count="0"
 set k="HKEY_CURRENT_USER\Software\Microsoft\Terminal Server Client\LocalDevices"
 
-for /f "tokens=1-3" %%a in ('findstr /R "^[^#]" RDP.txt') do (
+for /f "tokens=*" %%z in ('dir /s/b RDP.txt') do (
+for /f "tokens=1-3" %%a in ('findstr /r "^[^#]" "%%z"') do (
 for /f "tokens=*" %%d in ('RDP.exe %%c') do (
 (
 rem Required - User credential:
@@ -55,12 +57,13 @@ echo remoteapplicationmode:i:0
 echo alternate shell:s:
 echo shell working directory:s:
 echo gatewayhostname:s:
-) > %%a.rdp
+) > %%z\..\%%a.rdp
 
 rem Add host to registry to bypass the certificate warnings
 reg add %k% /v %%a /f /t REG_DWORD /d 76 >nul
 
 set /a count+=1
+)
 )
 )
 
