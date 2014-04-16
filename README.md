@@ -10,29 +10,34 @@ Usage
 
 ```
 Usage: bash WIN2003.sh [options]
-  -h, --help                Show this help and exit
+  -h, --help, -?            Show this help and exit
 
-  -u, --url      <url>      URL of the template to download
+  -u, --url      <url>      Override the template download URL
                             default is http://d.cgh.io/<template-name>.7z
                             If it is a number like '2', it will be:
                             http://d2.cgh.io/<template-name>.7z
   -p, --password <password> Use this password when extracting .7z
   -t, --template <name>     Template name, default: WIN2003
-  -l, --disk     <name>     Disk name, default: DTP_Windows_2003_c
+  -l, --diskname <name>     Disk name, default: DTP_Windows_2003_c
   -d, --disksize <size>     User disk size, default: 100GiB
   -m, --memory   <size>     Memory size, default: 3GiB
-  -i, --skip-os-install     I have my OS installed!
 
   -n, --number   <number>   Number of VMs to create, default: 4
-  -1, -2, ..., -10, ...     Only process nth VMs. --number is ignored.
+  -1, -2, ..., -10, ...     Only process nth VMs, --number is ignored
   -s, --no-namesake         Delete VMs having the same name if exists
 
-      --skip-host-label     Don't you ever touch my host name label!
   -y, --no-confirm          Don't waste time to confirm
+  -#, --progress-bar        I just love to use cURL's progress bar
+
+  -H, --skip-host-label     Don't change host name label to IP address
+  -D, --skip-tpl-download   Don't download template again
+  -I, --skip-tpl-import     Don't import template again
+  -A, --skip-tpl-adjust     Don't adjust the size of memory and disk
+  -V, --skip-vm-install     Don't install any virtual machines
 
 Examples:
-  #1 - You have installed OS, but want to re-install your third VM:
-  bash WIN2003.sh -3 --skip-os-install --no-namesake
+  #1 - You have downloaded template, but want to re-install your third VM:
+  bash WIN2003.sh -3 -D -I -A --no-namesake
 
   #2 - Pipe shell script
   curl http://d.cgh.io/WIN2003.sh | bash /dev/stdin --help

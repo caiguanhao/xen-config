@@ -11,30 +11,30 @@ copyright() {
 
 help() {
   echo "Usage: bash $0 [options]"
-  echo "  -h, --help                Show this help and exit"
+  echo "  -h, --help, -?            Show this help and exit"
   echo
-  echo "  -u, --url      <url>      URL of the template to download"
+  echo "  -u, --url      <url>      Override the template download URL"
   echo "                            default is $NODE_P$NODE_S<template-name>.7z"
   echo "                            If it is a number like '2', it will be:"
   echo "                            ${NODE_P}2$NODE_S<template-name>.7z"
   echo "  -p, --password <password> Use this password when extracting .7z"
   echo "  -t, --template <name>     Template name, default: $TEMPLATE"
-  echo "  -l, --disk     <name>     Disk name, default: $DISKNAME"
+  echo "  -l, --diskname <name>     Disk name, default: $DISKNAME"
   echo "  -d, --disksize <size>     User disk size, default: $DISKSIZE"
   echo "  -m, --memory   <size>     Memory size, default: $MEMORY"
   echo
   echo "  -n, --number   <number>   Number of VMs to create, default: $VMNUMBER"
-  echo "  -1, -2, ..., -10, ...     Only process nth VMs. --number is ignored."
+  echo "  -1, -2, ..., -10, ...     Only process nth VMs, --number is ignored"
   echo "  -s, --no-namesake         Delete VMs having the same name if exists"
   echo
   echo "  -y, --no-confirm          Don't waste time to confirm"
-  echo "      --skip-host-label     Don't you ever touch my host name label!"
-  echo "      --skip-tpl-download   Don't download template again"
-  echo "      --skip-tpl-import     Don't import template again"
-  echo "      --skip-tpl-adjust     Don't adjust memory and disk"
-  echo "      --skip-vm-install     I have my virtual machines installed!"
-  echo
   echo "  -#, --progress-bar        I just love to use cURL's progress bar"
+  echo
+  echo "  -H, --skip-host-label     Don't change host name label to IP address"
+  echo "  -D, --skip-tpl-download   Don't download template again"
+  echo "  -I, --skip-tpl-import     Don't import template again"
+  echo "  -A, --skip-tpl-adjust     Don't adjust the size of memory and disk"
+  echo "  -V, --skip-vm-install     Don't install any virtual machines"
   exit 0
 }
 
@@ -70,7 +70,7 @@ copyright
 
 for argument in "$@"; do
   case "$argument" in
-  -h|--help)                    help                         ;;
+  -h|--help|-?)                 help                         ;;
   -u|--url)              shift; OSURL="$1";            shift ;;
   -p|--password)         shift; P7ZIPPASS="-p$1";      shift ;;
   -t|--template)         shift; TEMPLATE="$1";         shift ;;
@@ -80,12 +80,12 @@ for argument in "$@"; do
   -n|--number)           shift; VMNUMBER="$1";         shift ;;
   -s|--no-namesake)      shift; NONAMESAKE=Yes               ;;
   -y|--no-confirm)       shift; NOCONFIRM=Yes                ;;
-     --skip-host-label)  shift; SKIPHOSTLABEL=Yes            ;;
-     --skip-tpl-download)shift; SKIPTPLDWLOAD=Yes            ;;
-     --skip-tpl-import)  shift; SKIPTPLIMPORT=Yes            ;;
-     --skip-tpl-adjust)  shift; SKIPTPLADJUST=Yes            ;;
-     --skip-vm-install)  shift; SKIPVMINSTALL=Yes            ;;
   -#|--progress-bar)     shift; CURLPBAR="-#"                ;;
+  -H|--skip-host-label)  shift; SKIPHOSTLABEL=Yes            ;;
+  -D|--skip-tpl-download)shift; SKIPTPLDWLOAD=Yes            ;;
+  -I|--skip-tpl-import)  shift; SKIPTPLIMPORT=Yes            ;;
+  -A|--skip-tpl-adjust)  shift; SKIPTPLADJUST=Yes            ;;
+  -V|--skip-vm-install)  shift; SKIPVMINSTALL=Yes            ;;
   -*[!0-9]*)                    unknown $argument            ;;
   -*)                           INSTALLVMS+=(${1/-/}); shift ;;
   esac
@@ -100,23 +100,23 @@ esac
 if [[ $NOCONFIRM == "No" ]]; then
   echo Options enabled:
   if [[ $SKIPTPLDWLOAD == "No" ]]; then
-    echo "  -u" .. URL of template to download ............. $OSURL
+    echo "  -u" .. URL of template to download ........ $OSURL
   fi
-    echo "  -t" .. Template name ........................... $TEMPLATE
-    echo "  -l" .. Change disk of this name ................ $DISKNAME
-    echo "  -d" .. Change user disk size to ................ $DISKSIZE
-    echo "  -m" .. Change memory size of template to ....... $MEMORY
+    echo "  -t" .. Template name ...................... $TEMPLATE
+    echo "  -l" .. Change disk of this name ........... $DISKNAME
+    echo "  -d" .. Change user disk size to ........... $DISKSIZE
+    echo "  -m" .. Change memory size to .............. $MEMORY
   if [[ ${#INSTALLVMS[@]} -eq 0 ]]; then
-    echo "  -n" .. Number of VMs to create ................. $VMNUMBER
+    echo "  -n" .. Number of VMs to create ............ $VMNUMBER
   else
-    echo "  --" .. Nth VMs to create ....................... ${INSTALLVMS[@]}
+    echo "  --" .. Nth VMs to create .................. ${INSTALLVMS[@]}
   fi
-  echo   "  -s" .. Delete VMs having the same name ......... $NONAMESAKE
-  echo   "    " .. Skip host label update .................. $SKIPHOSTLABEL
-  echo   "    " .. Skip template download .................. $SKIPTPLDWLOAD
-  echo   "    " .. Skip template import .................... $SKIPTPLIMPORT
-  echo   "    " .. Skip template adjustment ................ $SKIPTPLADJUST
-  echo   "    " .. Skip VM installation .................... $SKIPVMINSTALL
+  echo   "  -s" .. Delete VMs having the same name .... $NONAMESAKE
+  echo   "  -H" .. Skip host label update ............. $SKIPHOSTLABEL
+  echo   "  -D" .. Skip template download ............. $SKIPTPLDWLOAD
+  echo   "  -I" .. Skip template import ............... $SKIPTPLIMPORT
+  echo   "  -A" .. Skip template adjustment ........... $SKIPTPLADJUST
+  echo   "  -V" .. Skip VM installation ............... $SKIPVMINSTALL
   echo
   echo   "Operation starts in 10 seconds... Press Ctrl-C to Cancel"
   for s in `seq 10 1`; do
