@@ -70,7 +70,7 @@ copyright
 
 for argument in "$@"; do
   case "$argument" in
-  -h|--help|-?)                 help                         ;;
+  -h|--help|-\?)                help                         ;;
   -u|--url)              shift; OSURL="$1";            shift ;;
   -p|--password)         shift; P7ZIPPASS="-p$1";      shift ;;
   -t|--template)         shift; TEMPLATE="$1";         shift ;;
@@ -119,7 +119,7 @@ if [[ $NOCONFIRM == "No" ]]; then
   echo   "  -V" .. Skip VM installation ............... $SKIPVMINSTALL
   echo
   echo   "Operation starts in 10 seconds... Press Ctrl-C to Cancel"
-  for s in `seq 10 1`; do
+  for s in `seq 10 -1 1`; do
     printf "$s.."
     sleep 1
   done
