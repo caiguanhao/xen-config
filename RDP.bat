@@ -26,8 +26,8 @@ rem You can create one RDP connection, adjust the options and then save it.
 rem Open the saved file in Notepad, copy every line (except the lines contain
 rem the IP address or the username) here to update settings:
 echo screen mode id:i:1
-echo desktopwidth:i:1024
-echo desktopheight:i:768
+echo desktopwidth:i:800
+echo desktopheight:i:600
 echo session bpp:i:32
 echo winposstr:s:0,3,0,0,800,600
 echo compression:i:1
@@ -69,6 +69,7 @@ set /a count+=1
 
 echo.
 echo                 OK! %count% RDP connections generated.
-echo                       Press Enter to exit
+echo              Press Enter or wait 2 seconds to exit
+echo.
 
-pause >nul
+timeout /t 2 >nul
