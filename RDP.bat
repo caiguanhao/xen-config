@@ -15,6 +15,7 @@ set k="HKEY_CURRENT_USER\Software\Microsoft\Terminal Server Client\LocalDevices"
 
 for /f "tokens=*" %%z in ('dir /s/b RDP.txt') do (
 for /f "tokens=1-3" %%a in ('findstr /r "^[^#]" "%%z"') do (
+for /f "tokens=1 delims=:" %%h in ("%%a") do (
 for /f "tokens=*" %%d in ('RDP.exe %%c') do (
 (
 rem Required - User credential:
@@ -57,12 +58,13 @@ echo remoteapplicationmode:i:0
 echo alternate shell:s:
 echo shell working directory:s:
 echo gatewayhostname:s:
-) > %%z\..\%%a.rdp
+) > %%z\..\%%h.rdp
 
 rem Add host to registry to bypass the certificate warnings
-reg add %k% /v %%a /f /t REG_DWORD /d 76 >nul
+reg add %k% /v %%h /f /t REG_DWORD /d 76 >nul
 
 set /a count+=1
+)
 )
 )
 )
