@@ -19,6 +19,9 @@ help() {
   echo "                            ${NODE_P}2$NODE_S<template-name>.7z"
   echo "  -p, --password <password> Use this password when extracting .7z"
   echo "  -t, --template <name>     Name of template to use, default: $TEMPLATE"
+  echo "  -N, --storage-name <name> Template directory name: /$TPLDIRNAME"
+  echo "  -S, --storage-size <size> Template directory size: $TPLDIRNAME"
+
   echo "  -l, --diskname <name>     Name of disk to resize, default: $DISKNAME"
   echo "  -d, --disksize <size>     Resize user disk to, default: $DISKSIZE"
   echo "  -m, --memory   <size>     Resize memory size to, default: $MEMORY"
@@ -51,13 +54,14 @@ unknown() {
 NODE_P="http://d"
 NODE_S=".cgh.io/"
 TEMPLATE=WIN2003
+TPLDIRNAME=CGH
+TPLDIRSIZE=20GB
 DISKNAME=DTP_Windows_2003_c
 DISKSIZE=100GiB
 MEMORY=3GiB
 VMNUMBER=4
 P7ZIPPASS=
 INSTALLVMS=()
-LVNAME=CGH
 CURLPBAR=
 
 # Switches:
@@ -78,6 +82,8 @@ for argument in "$@"; do
   -u|--url)              shift; OSURL="$1";            shift ;;
   -p|--password)         shift; P7ZIPPASS="-p$1";      shift ;;
   -t|--template)         shift; TEMPLATE="$1";         shift ;;
+  -N|--storage-name)     shift; TPLDIRNAME="$1";       shift ;;
+  -S|--storage-size)     shift; TPLDIRSIZE="$1";       shift ;;
   -l|--diskname)         shift; DISKNAME="$1";         shift ;;
   -d|--disksize)         shift; DISKSIZE="$1";         shift ;;
   -m|--memory)           shift; MEMORY="$1";           shift ;;
@@ -105,9 +111,9 @@ case $OSURL in
 esac
 
 if [[ $P7ZIPPASS == "" ]]; then
-  P7ZIPPASSWORD=No
+  P7ZIPPASSWORD=Not\ provided
 else
-  P7ZIPPASSWORD=Yes
+  P7ZIPPASSWORD=Yes,\ $((${#P7ZIPPASS} - 2))\ characters.
 fi
 
 set +e
@@ -130,10 +136,12 @@ set -e
 
 if [[ $NOCONFIRM == "No" ]]; then
   echo Host information:
-  echo   "  --" .. IP Address ......................... $IPADDR
+  echo   "  --" .. IP address ......................... $IPADDR
   echo Options enabled:
   if [[ $SKIPTPLDWLOAD == "No" ]]; then
     echo "  -u" .. URL of template to download ........ $OSURL
+    echo "  -N" .. Template will download to .......... /$TPLDIRNAME
+    echo "  -S" .. Template directory size ............ $TPLDIRSIZE
     echo "  -p" .. Password to extract 7zip file ...... $P7ZIPPASSWORD
   fi
     echo "  -t" .. Template name to use ............... $TEMPLATE
@@ -201,22 +209,24 @@ fi
 
 # Start downloading and adjusting template #####################################
 if [[ $SKIPTPLDWLOAD == "No" ]]; then
-  if [[ ! -d /$LVNAME ]]; then
+  if [[ ! -d /$TPLDIRNAME ]]; then
     echo Creating Storage...
     VGNAME=`vgs | grep "VG_XenStorage" | cut -c 3-52`
     # if it says: Logical volume already exists in volume group,
-    # you can run: lvremove /dev/$VGNAME/$LVNAME
-    lvcreate -L 35GB -n $LVNAME $VGNAME
-    mkfs.ext3 /dev/$VGNAME/$LVNAME
-    mkdir /$LVNAME
-    mount /dev/$VGNAME/$LVNAME /$LVNAME
+    # you can run: lvremove /dev/$VGNAME/$TPLDIRNAME
+    lvcreate -L $TPLDIRSIZE -n $TPLDIRNAME $VGNAME
+    mkfs.ext3 /dev/$VGNAME/$TPLDIRNAME
+    mkdir /$TPLDIRNAME
+    mount /dev/$VGNAME/$TPLDIRNAME /$TPLDIRNAME
   fi
 
-  cd /$LVNAME
+  cd /$TPLDIRNAME
 
   echo Downloading template...
   curl -LOC - $CURLPBAR $OSURL
 fi
+
+cd /$TPLDIRNAME
 
 if [[ $SKIPTPLEXTRACT == "No" ]]; then
   if [[ ! -f ./7z/7z ]]; then
@@ -295,6 +305,7 @@ fi
 
 # Start creating VMs ###########################################################
 if [[ $SKIPVMINSTALL == "No" ]]; then
+  IFS=$' \t\n'
   if [[ ${#INSTALLVMS[@]} -eq 0 ]]; then
     echo Creating $VMNUMBER virtual machine\(s\) from template...
     SEQUENCE=`seq $VMNUMBER`
