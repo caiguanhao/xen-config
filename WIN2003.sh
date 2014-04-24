@@ -156,12 +156,14 @@ if [[ $NOCONFIRM == "No" ]]; then
     echo "  -d" .. Resize user disk to ................ $DISKSIZE
     echo "  -m" .. Resize memory to ................... $MEMORY
   fi
+  if [[ $SKIPVMINSTALL == "No" ]]; then
   if [[ ${#INSTALLVMS[@]} -eq 0 ]]; then
     echo "  -n" .. Number of VMs to create ............ $VMNUMBER
   else
     echo "  --" .. Nth VMs to create .................. ${INSTALLVMS[@]}
   fi
   echo   "  -s" .. If VM of the same name exists ...... $NAMESAKE
+  fi
   echo   "  -H" .. Skip host label update ............. $SKIPHOSTLABEL
   echo   "  -D" .. Skip template download ............. $SKIPTPLDWLOAD
   echo   "  -E" .. Skip template extract .............. $SKIPTPLEXTRACT
