@@ -26,6 +26,8 @@ help() {
   echo "  -n, --number   <number>   Number of VMs to create, default: $VMNUMBER"
   echo "  -1, -2, ..., -10, ...     Only process nth VMs, --number is ignored"
   echo "  -s, --no-namesake         Delete VMs having the same name if exists"
+  echo "  -i, --ignore-namesake     Don't do anything if having the same name"
+  echo "  -a, --allow-namesake      Install the same-name VM anyway"
   echo
   echo "  -y, --no-confirm          Don't waste time to confirm"
   echo "  -#, --progress-bar        I just love to use cURL's progress bar"
@@ -66,7 +68,7 @@ SKIPTPLIMPORT=No
 SKIPTPLADJUST=No
 SKIPVMINSTALL=No
 NOCONFIRM=No
-NONAMESAKE=No
+NAMESAKE=Exit
 
 copyright
 
@@ -80,7 +82,9 @@ for argument in "$@"; do
   -d|--disksize)         shift; DISKSIZE="$1";         shift ;;
   -m|--memory)           shift; MEMORY="$1";           shift ;;
   -n|--number)           shift; VMNUMBER="$1";         shift ;;
-  -s|--no-namesake)      shift; NONAMESAKE=Yes               ;;
+  -s|--no-namesake)      shift; NAMESAKE=Delete              ;;
+  -i|--ignore-namesake)  shift; NAMESAKE=Ignore              ;;
+  -a|--allow-namesake)   shift; NAMESAKE=Continue            ;;
   -y|--no-confirm)       shift; NOCONFIRM=Yes                ;;
   -#|--progress-bar)     shift; CURLPBAR="-#"                ;;
   -H|--skip-host-label)  shift; SKIPHOSTLABEL=Yes            ;;
@@ -123,7 +127,7 @@ if [[ $NOCONFIRM == "No" ]]; then
   else
     echo "  --" .. Nth VMs to create .................. ${INSTALLVMS[@]}
   fi
-  echo   "  -s" .. Delete VMs having the same name .... $NONAMESAKE
+  echo   "  -s" .. If VM of the same name exists ...... $NAMESAKE
   echo   "  -H" .. Skip host label update ............. $SKIPHOSTLABEL
   echo   "  -D" .. Skip template download ............. $SKIPTPLDWLOAD
   echo   "  -E" .. Skip template extract .............. $SKIPTPLEXTRACT
@@ -294,15 +298,20 @@ if [[ $SKIPVMINSTALL == "No" ]]; then
     VMIPADDR="$IPADDR1.$(($IPADDR2 + $i))"
     NAME=$VMIPADDR
 
-    if [[ $NONAMESAKE == "Yes" ]]; then
-      IFS=$' \t\n'
-      NAMESAKES=(`xe vm-list | grep "$NAME" -B 1 | grep ^uuid | sed 's/.*: //'`)
-      if [[ ${#NAMESAKES[@]} -eq 0 ]]; then
-        echo "Don't worry. No VM uses the name $NAME."
-      else
+    IFS=$' \t\n'
+    NAMESAKES=(`xe vm-list | grep "$NAME" -B 1 | grep ^uuid | sed 's/.*: //'`)
+    if [[ ${#NAMESAKES[@]} -eq 0 ]]; then
+      echo "Don't worry. No VM uses the name $NAME."
+    else
+      if [[ $NAMESAKE == "Delete" ]]; then
         for NS in "${NAMESAKES[@]}"; do
           xe vm-uninstall uuid=$NS force=true
         done
+      elif [[ $NAMESAKE == "Ignore" ]]; then
+        continue
+      elif [[ $NAMESAKE != "Continue" ]]; then
+        echo "Error: VM $NAME already exists."
+        exit 1
       fi
     fi
 
