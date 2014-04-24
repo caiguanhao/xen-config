@@ -32,6 +32,7 @@ help() {
   echo
   echo "  -H, --skip-host-label     Don't change host name label to IP address"
   echo "  -D, --skip-tpl-download   Don't download template again"
+  echo "  -E, --skip-tpl-extract    Don't extract template again"
   echo "  -I, --skip-tpl-import     Don't import template again"
   echo "  -A, --skip-tpl-adjust     Don't adjust the size of memory and disk"
   echo "  -V, --skip-vm-install     Don't install any virtual machines"
@@ -60,6 +61,7 @@ CURLPBAR=
 # Switches:
 SKIPHOSTLABEL=No
 SKIPTPLDWLOAD=No
+SKIPTPLEXTRACT=No
 SKIPTPLIMPORT=No
 SKIPTPLADJUST=No
 SKIPVMINSTALL=No
@@ -83,6 +85,7 @@ for argument in "$@"; do
   -#|--progress-bar)     shift; CURLPBAR="-#"                ;;
   -H|--skip-host-label)  shift; SKIPHOSTLABEL=Yes            ;;
   -D|--skip-tpl-download)shift; SKIPTPLDWLOAD=Yes            ;;
+  -E|--skip-tpl-extract) shift; SKIPTPLEXTRACT=Yes           ;;
   -I|--skip-tpl-import)  shift; SKIPTPLIMPORT=Yes            ;;
   -A|--skip-tpl-adjust)  shift; SKIPTPLADJUST=Yes            ;;
   -V|--skip-vm-install)  shift; SKIPVMINSTALL=Yes            ;;
@@ -123,6 +126,7 @@ if [[ $NOCONFIRM == "No" ]]; then
   echo   "  -s" .. Delete VMs having the same name .... $NONAMESAKE
   echo   "  -H" .. Skip host label update ............. $SKIPHOSTLABEL
   echo   "  -D" .. Skip template download ............. $SKIPTPLDWLOAD
+  echo   "  -E" .. Skip template extract .............. $SKIPTPLEXTRACT
   echo   "  -I" .. Skip template import ............... $SKIPTPLIMPORT
   echo   "  -A" .. Skip template adjustment ........... $SKIPTPLADJUST
   echo   "  -V" .. Skip VM installation ............... $SKIPVMINSTALL
@@ -196,7 +200,9 @@ if [[ $SKIPTPLDWLOAD == "No" ]]; then
 
   echo Downloading template...
   curl -LOC - $CURLPBAR $OSURL
+fi
 
+if [[ $SKIPTPLEXTRACT == "No" ]]; then
   if [[ ! -f ./7z/7z ]]; then
     echo Downloading p7zip...
     P7ZIPURL="http://sourceforge.net/projects/p7zip/files/p7zip/9.20.1/"
