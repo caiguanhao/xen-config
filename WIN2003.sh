@@ -20,7 +20,7 @@ help() {
   echo "  -p, --password <password> Use this password when extracting .7z"
   echo "  -t, --template <name>     Name of template to use, default: $TEMPLATE"
   echo "  -N, --storage-name <name> Template directory name: /$TPLDIRNAME"
-  echo "  -S, --storage-size <size> Template directory size: $TPLDIRNAME"
+  echo "  -S, --storage-size <size> Template directory size: $TPLDIRSIZE"
 
   echo "  -l, --diskname <name>     Name of disk to resize, default: $DISKNAME"
   echo "  -d, --disksize <size>     Resize user disk to, default: $DISKSIZE"
@@ -75,6 +75,12 @@ NOCONFIRM=No
 NAMESAKE=Exit
 
 copyright
+
+for argument in "$@"; do
+  case "$argument" in
+  -h|--help|-\?)                help                         ;;
+  esac
+done
 
 for argument in "$@"; do
   case "$argument" in
