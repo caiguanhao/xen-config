@@ -18,10 +18,10 @@ help() {
   echo "                            If it is a number like '2', it will be:"
   echo "                            ${NODE_P}2$NODE_S<template-name>.7z"
   echo "  -p, --password <password> Use this password when extracting .7z"
-  echo "  -t, --template <name>     Template name, default: $TEMPLATE"
-  echo "  -l, --diskname <name>     Disk name, default: $DISKNAME"
-  echo "  -d, --disksize <size>     User disk size, default: $DISKSIZE"
-  echo "  -m, --memory   <size>     Memory size, default: $MEMORY"
+  echo "  -t, --template <name>     Name of template to use, default: $TEMPLATE"
+  echo "  -l, --diskname <name>     Name of disk to resize, default: $DISKNAME"
+  echo "  -d, --disksize <size>     Resize user disk to, default: $DISKSIZE"
+  echo "  -m, --memory   <size>     Resize memory size to, default: $MEMORY"
   echo
   echo "  -n, --number   <number>   Number of VMs to create, default: $VMNUMBER"
   echo "  -1, -2, ..., -10, ...     Only process nth VMs, --number is ignored"
@@ -74,7 +74,7 @@ for argument in "$@"; do
   -u|--url)              shift; OSURL="$1";            shift ;;
   -p|--password)         shift; P7ZIPPASS="-p$1";      shift ;;
   -t|--template)         shift; TEMPLATE="$1";         shift ;;
-  -l|--disk)             shift; DISKNAME="$1";         shift ;;
+  -l|--diskname)         shift; DISKNAME="$1";         shift ;;
   -d|--disksize)         shift; DISKSIZE="$1";         shift ;;
   -m|--memory)           shift; MEMORY="$1";           shift ;;
   -n|--number)           shift; VMNUMBER="$1";         shift ;;
@@ -97,15 +97,24 @@ case $OSURL in
   *)             OSURL="$NODE_P$OSURL$NODE_S$TEMPLATE.7z"    ;;
 esac
 
+if [[ $P7ZIPPASS == "" ]]; then
+  P7ZIPPASSWORD=No
+else
+  P7ZIPPASSWORD=Yes
+fi
+
 if [[ $NOCONFIRM == "No" ]]; then
   echo Options enabled:
   if [[ $SKIPTPLDWLOAD == "No" ]]; then
     echo "  -u" .. URL of template to download ........ $OSURL
+    echo "  -p" .. Password to extract 7zip file ...... $P7ZIPPASSWORD
   fi
-    echo "  -t" .. Template name ...................... $TEMPLATE
-    echo "  -l" .. Change disk of this name ........... $DISKNAME
-    echo "  -d" .. Change user disk size to ........... $DISKSIZE
-    echo "  -m" .. Change memory size to .............. $MEMORY
+    echo "  -t" .. Template name to use ............... $TEMPLATE
+  if [[ $SKIPTPLADJUST == "No" ]]; then
+    echo "  -l" .. Disk name to use ................... $DISKNAME
+    echo "  -d" .. Resize user disk to ................ $DISKSIZE
+    echo "  -m" .. Resize memory to ................... $MEMORY
+  fi
   if [[ ${#INSTALLVMS[@]} -eq 0 ]]; then
     echo "  -n" .. Number of VMs to create ............ $VMNUMBER
   else
@@ -175,6 +184,8 @@ if [[ $SKIPTPLDWLOAD == "No" ]]; then
   if [[ ! -d /$LVNAME ]]; then
     echo Creating Storage...
     VGNAME=`vgs | grep "VG_XenStorage" | cut -c 3-52`
+    # if it says: Logical volume already exists in volume group,
+    # you can run: lvremove /dev/$VGNAME/$LVNAME
     lvcreate -L 35GB -n $LVNAME $VGNAME
     mkfs.ext3 /dev/$VGNAME/$LVNAME
     mkdir /$LVNAME
