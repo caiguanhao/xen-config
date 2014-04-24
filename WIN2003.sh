@@ -110,7 +110,27 @@ else
   P7ZIPPASSWORD=Yes
 fi
 
+set +e
+IFS=$' \t\n'
+HOSTUUID=(`xe host-list 2>/dev/null | grep ^uuid | sed 's/.*: //'`)
+if [[ ${#HOSTUUID[@]} -gt 1 ]]; then
+  echo "Error: it should have one host. Right?"
+  exit 1
+fi
+HOSTUUID=${HOSTUUID[0]}
+IPADDR=`xe host-param-get uuid=$HOSTUUID param-name=address 2>/dev/null`
+if [[ $IPADDR == "" ]]; then
+  echo Getting IP address from ifconfig instead of xe command...
+  IPADDR=(`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | \
+          grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' | \
+          grep -v '192.168.*.*'`)
+  IPADDR=${IPADDR[0]}
+fi
+set -e
+
 if [[ $NOCONFIRM == "No" ]]; then
+  echo Host information:
+  echo   "  --" .. IP Address ......................... $IPADDR
   echo Options enabled:
   if [[ $SKIPTPLDWLOAD == "No" ]]; then
     echo "  -u" .. URL of template to download ........ $OSURL
@@ -145,18 +165,6 @@ fi
 
 
 # Getting basic information ####################################################
-IFS=$' \t\n'
-HOSTUUID=(`xe host-list | grep ^uuid | sed 's/.*: //'`)
-if [[ ${#HOSTUUID[@]} -gt 1 ]]; then
-  echo "Error: it should have one host. Right?"
-  exit 1
-fi
-IPADDR=`xe host-param-get uuid=$HOSTUUID param-name=address`
-if [[ $IPADDR == "" ]]; then
-  echo Getting IP address from ifconfig instead of xe command...
-  IPADDR=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | \
-          grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`
-fi
 IFS=$','
 for PIFUUID in `xe pif-list --minimal`; do
   PIFIP=`xe pif-param-get param-name=IP uuid=$PIFUUID`
@@ -174,6 +182,10 @@ fi
 
 # Start updating the name label of Xen host ####################################
 if [[ $SKIPHOSTLABEL == "No" ]]; then
+  if [[ $HOSTUUID == "" ]]; then
+    echo Cannot get the uuid of host.
+    exit 1
+  fi
   echo Updating name of Xen host...
   OLDNAME=`xe host-param-get uuid=$HOSTUUID param-name=name-label`
   NEWNAME="$IPADDR"
