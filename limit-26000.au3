@@ -7,9 +7,18 @@
 
 #include <Constants.au3>
 
-Run("C:\Program Files\ServerSpeeder\AppexAcceleratorUI.exe -professional")
+Local $title = "睿悠科技 锐速"
+Local $win
 
-Local $win = WinWaitActive("睿悠科技 锐速", "", 5)
+If ProcessExists("AppexAcceleratorUI.exe") Then
+  $win = WinWait($title, "", 5)
+  If WinExists($title, "") Then
+    WinActivate($title, "")
+  EndIf
+Else
+  Run("C:\Program Files\ServerSpeeder\AppexAcceleratorUI.exe -professional")
+  $win = WinWaitActive($title, "", 5)
+EndIf
 
 ControlClick($win, "", "[CLASS:Button; INSTANCE:1]")
 

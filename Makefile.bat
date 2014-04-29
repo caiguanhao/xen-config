@@ -58,6 +58,26 @@ echo Compiling install-serverspeeder.exe...
   /filedescription "一键安装锐速 One click to install ServerSpeeder." ^
   /legalcopyright "Copyright (c) 2014 Cai Guanhao (Choi Goon-ho)"
 
+echo Compiling open-tcpz.exe...
+"C:\Program Files (x86)\AutoIt3\Aut2Exe\Aut2exe.exe" ^
+  /in open-tcpz.au3 ^
+  /out "dist\一键启动TCPZ.exe" ^
+  /icon cghio.ico ^
+  /x86 /comp 4 /pack ^
+  /companyname cgh.io ^
+  /filedescription "一键启动TCPZ One click to open TCPZ." ^
+  /legalcopyright "Copyright (c) 2014 Cai Guanhao (Choi Goon-ho)"
+
+echo Compiling open-ktj.exe...
+"C:\Program Files (x86)\AutoIt3\Aut2Exe\Aut2exe.exe" ^
+  /in open-ktj.au3 ^
+  /out "dist\一键启动卡淘金.exe" ^
+  /icon cghio.ico ^
+  /x86 /comp 4 /pack ^
+  /companyname cgh.io ^
+  /filedescription "一键启动卡淘金 One click to open KTJ." ^
+  /legalcopyright "Copyright (c) 2014 Cai Guanhao (Choi Goon-ho)"
+
 echo Compiling hotkey...
 "Ahk2Exe.exe" ^
   /in hotkey.ahk ^
