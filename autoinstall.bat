@@ -6,6 +6,8 @@ echo Copyright (c) 2014 Cai Guanhao (Choi Goon-ho)
 echo Licensed under the terms of the MIT license.
 echo Report bugs on https://github.com/caiguanhao/xen-config/issues
 echo --------------------------------------------------------------
+echo Press Enter to re-install Miner.
+pause >nul
 echo Killing Miner... 2>nul
 taskkill /f /t /im Miner.exe >nul 2>nul
 taskkill /f /t /im MinerWatch.exe >nul 2>nul
