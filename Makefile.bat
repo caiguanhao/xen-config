@@ -78,6 +78,26 @@ echo Compiling open-ktj.exe...
   /filedescription "一键启动卡淘金 One click to open KTJ." ^
   /legalcopyright "Copyright (c) 2014 Cai Guanhao (Choi Goon-ho)"
 
+echo Compiling open-llks.exe...
+"C:\Program Files (x86)\AutoIt3\Aut2Exe\Aut2exe.exe" ^
+  /in open-llks.au3 ^
+  /out "dist\一键启动流量矿石.exe" ^
+  /icon cghio.ico ^
+  /x86 /comp 4 /pack ^
+  /companyname cgh.io ^
+  /filedescription "一键启动流量矿石 One click to open LLKS." ^
+  /legalcopyright "Copyright (c) 2014 Cai Guanhao (Choi Goon-ho)"
+
+echo Compiling open-stats.exe...
+"C:\Program Files (x86)\AutoIt3\Aut2Exe\Aut2exe.exe" ^
+  /in open-stats.au3 ^
+  /out "dist\一键打开锐速统计.exe" ^
+  /icon cghio.ico ^
+  /x86 /comp 4 /pack ^
+  /companyname cgh.io ^
+  /filedescription "一键打开锐速统计 One click to open LLKS." ^
+  /legalcopyright "Copyright (c) 2014 Cai Guanhao (Choi Goon-ho)"
+
 echo Compiling hotkey...
 "Ahk2Exe.exe" ^
   /in hotkey.ahk ^

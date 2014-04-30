@@ -1,3 +1,10 @@
+; AutoIt script to automatically open TCP-Z.
+; --------------------------------------------------------------
+; Copyright (c) 2014 Cai Guanhao (Choi Goon-ho)
+; Licensed under the terms of the MIT license.
+; Report bugs on https://github.com/caiguanhao/xen-config/issues
+; --------------------------------------------------------------
+
 If ProcessExists("tcpz.exe") Then
   Local $title = "TCP-Z   (x86)   v2.6.1.72"
   WinWait($title, "", 5)
