@@ -170,3 +170,22 @@ use this command on your personal computer.
 ```shell
 sshpass -p "password" ssh root@host 'curl -sL http://host/WIN2003.sh | sh'
 ```
+
+Some useful xe Commands
+-----------------------
+
+Change the name label of the host and each VM to its IP address:
+
+```shell
+(IFS=$','; for HOST in `xe host-list --minimal`; do \
+IP=`xe host-param-get uuid=$HOST param-name=address`; \
+if [[ $IP =~ "^[0-9.]*$" ]]; then \
+xe host-param-set uuid=$HOST name-label=$IP && \
+echo The name label of host $HOST has been changed to $IP.; fi; done)
+
+(IFS=$','; for VM in `xe vm-list --minimal`; do \
+IFS=$'; '; IP=(`xe vm-param-get uuid=$VM param-name=networks`); \
+if [[ ${IP[1]} =~ "^[0-9.]*$" ]]; then \
+xe vm-param-set uuid=$VM name-label=${IP[1]} && \
+echo The name label of VM $VM has been changed to ${IP[1]}.; fi; done)
+```
