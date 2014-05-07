@@ -17,30 +17,35 @@ Usage: bash WIN2003.sh [options]
                             If it is a number like '2', it will be:
                             http://d2.cgh.io/<template-name>.7z
   -p, --password <password> Use this password when extracting .7z
-  -t, --template <name>     Template name, default: WIN2003
-  -l, --diskname <name>     Disk name, default: DTP_Windows_2003_c
-  -d, --disksize <size>     User disk size, default: 100GiB
-  -m, --memory   <size>     Memory size, default: 3GiB
+  -t, --template <name>     Name of template to use, default: WIN2003
+  -N, --storage-name <name> Template directory name: /CGH
+  -S, --storage-size <size> Template directory size: 20GB
+  -l, --diskname <name>     Name of disk to resize, default: DTP_Windows_2003_c
+  -d, --disksize <size>     Resize user disk to, default: 100GiB
+  -m, --memory   <size>     Resize memory size to, default: 3GiB
 
   -n, --number   <number>   Number of VMs to create, default: 4
   -1, -2, ..., -10, ...     Only process nth VMs, --number is ignored
   -s, --no-namesake         Delete VMs having the same name if exists
+  -i, --ignore-namesake     Don't do anything if having the same name
+  -a, --allow-namesake      Install the same-name VM anyway
 
   -y, --no-confirm          Don't waste time to confirm
   -#, --progress-bar        I just love to use cURL's progress bar
 
   -H, --skip-host-label     Don't change host name label to IP address
   -D, --skip-tpl-download   Don't download template again
+  -E, --skip-tpl-extract    Don't extract template again
   -I, --skip-tpl-import     Don't import template again
   -A, --skip-tpl-adjust     Don't adjust the size of memory and disk
   -V, --skip-vm-install     Don't install any virtual machines
 
 Examples:
   #1 - You have downloaded template, but want to re-install your third VM:
-  bash WIN2003.sh -3 -D -I -A --no-namesake
+  bash WIN2003.sh -3 -D -E -I -A --no-namesake
 
   #2 - Pipe shell script
-  curl http://d.cgh.io/WIN2003.sh | bash /dev/stdin --help
+  curl http://d.cgh.io/WIN2003.sh | bash -s - -h
 ```
 
 Origin
