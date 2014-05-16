@@ -169,11 +169,13 @@ Host *
   UserKnownHostsFile=/dev/null
 ```
 
-And you can use `sshpass` to enter the password in a oneliner. You should ONLY
-use this command on your personal computer.
+Or you can add options to the ssh command. Also you can use `sshpass` to enter
+the password in a oneliner. You should ONLY use this command on your personal
+computer.
 
 ```shell
-sshpass -p "password" ssh root@host 'curl -sL http://host/WIN2003.sh | sh'
+sshpass -p "password" ssh -o StrictHostKeyChecking=no \
+UserKnownHostsFile=/dev/null root@host 'curl -sL http://host/WIN2003.sh | sh'
 ```
 
 Some useful xe Commands
