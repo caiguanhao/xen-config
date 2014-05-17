@@ -8,6 +8,8 @@ Requires: XenServer 6
 Usage
 -----
 
+Shell script helper to install Windows Server 2003 from template:
+
 ```
 Usage: bash WIN2003.sh [options]
   -h, --help, -?            Show this help and exit
