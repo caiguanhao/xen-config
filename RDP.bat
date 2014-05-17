@@ -40,6 +40,7 @@ rem Required - User credential:
 echo full address:s:%%a
 echo username:s:%%b
 echo password 51:b:%%d
+echo administrative session:i:1
 
 rem You can create one RDP connection, adjust the options and then save it.
 rem Open the saved file in Notepad, copy every line (except the lines contain
