@@ -26,11 +26,19 @@ Run("C:\Documents and Settings\Administrator\桌面\5-20号挂机\挂机.exe", "
 
 $win = WinWait("挂机")
 
-Sleep(2000)
+WinMove($win, "", 0, 0)
+
+Sleep(1000)
 
 ControlClick($win, "", "[CLASS:WindowsForms10.BUTTON.app.0.bb8560_r15_ad1; INSTANCE:1]")
 
-WinMove($win, "", 0, 0)
+Sleep(1000)
+
+ControlClick($win, "", "[CLASS:WindowsForms10.BUTTON.app.0.bb8560_r15_ad1; INSTANCE:1]")
+
+Sleep(1000)
+
+ControlClick($win, "", "[CLASS:WindowsForms10.BUTTON.app.0.bb8560_r15_ad1; INSTANCE:1]")
 
 SelfDelete()
 
